@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: testapinttdata
-        image: joseguarnizo/testapinttdata:latest #nombre de la imagen cargada en docker hubs
+        image: joseguarnizo/testnttdatdev:latest #nombre de la imagen cargada en docker hubs
         ports:
         - containerPort: 5000 #admite solo el puerto 5000 
 ---
