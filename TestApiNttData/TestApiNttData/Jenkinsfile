@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'joseguarnizo/testnttdatdev:v2'  // Nombre de la imagen Docker
-        K8S_DEPLOYMENT_FILE = 'deployment.yaml'        // Archivo de deployment de Kubernetes
+        K8S_DEPLOYMENT_FILE = 'deployment.yml'        // Archivo de deployment de Kubernetes
         DOCKER_CREDENTIALS = 'docker-hub-credentials'  // Credenciales de Docker Hub configuradas en Jenkins
     }
 
@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Obtener el código desde el repositorio
-                git 'https://github.com/JoseGuarnizo/NttDataTest/tree/main/TestApiNttData/TestApiNttData'
+                git 'https://github.com/JoseGuarnizo/NttDataTest.git'
             }
         }
 
