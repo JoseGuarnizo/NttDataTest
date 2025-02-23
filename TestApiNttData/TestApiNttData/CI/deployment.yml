@@ -1,0 +1,35 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: testapinttdata-deployment
+spec:
+  replicas: 2 #corresponde a dos nodos o replicas
+  selector:
+    matchLabels:
+      app: testapinttdata
+  template:
+    metadata:
+      labels:
+        app: testapinttdata
+    spec:
+      containers:
+      - name: testapinttdata
+        image: joseguarnizo/testapinttdata:latest #nombre de la imagen cargada en docker hubs
+        ports:
+        - containerPort: 5000 #admite solo el puerto 5000 
+---
+# ------------------- Service ------------------- #
+apiVersion: v1
+kind: Service
+metadata:
+  name: testapinttdata-service
+spec:
+  selector:
+    app: testapinttdata
+  ports:
+    - protocol: TCP
+      port: 80            # Puerto en el que el servicio estará disponible
+      targetPort: 5000    # Redirige el tráfico al puerto 5000 dentro del contenedor
+  type: LoadBalancer
+
+
