@@ -1,11 +1,12 @@
 {
   "Version": 1,
-  "Hash": "RJeEzR9HetYaMr97lMao0oxmIQ9EbzYF8eMAxUkYuNA=",
+  "Hash": "Ws4eRQ9vNMoZJJa3u7tDpHg1hMj1mIwQYMgxdX4KhIQ=",
   "Source": "TestApiNttData",
   "BasePath": "_content/TestApiNttData",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
   "DiscoveryPatterns": [],
-  "Assets": []
+  "Assets": [],
+  "Endpoints": []
 }

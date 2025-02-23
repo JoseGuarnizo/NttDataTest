@@ -3,7 +3,7 @@
 public class ApiKeyMidleware
 {
 	private readonly RequestDelegate _nextApi;
-	private const string KeyHeader = "X-API-KEY";
+	private const string KeyHeader = "X-Parse-REST-API-Key";
 	private readonly string apiKeyValidate;
 
 	public ApiKeyMidleware(RequestDelegate apiNext, IConfiguration confApi)

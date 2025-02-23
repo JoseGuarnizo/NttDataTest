@@ -1,1 +1,72 @@
- 
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'joseguarnizo/testnttdatdev:v2'  // Nombre de la imagen Docker
+        K8S_DEPLOYMENT_FILE = 'deployment.yaml'        // Archivo de deployment de Kubernetes
+        DOCKER_CREDENTIALS = 'docker-hub-credentials'  // Credenciales de Docker Hub configuradas en Jenkins
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Obtener el código desde el repositorio
+                git 'https://github.com/JoseGuarnizo/NttDataTest/tree/main/TestApiNttData/TestApiNttData'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Construir la imagen Docker usando el Dockerfile
+                    sh 'docker build -t $DOCKER_IMAGE .'
+                }
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                script {
+                    // Iniciar sesión en Docker Hub (usando las credenciales configuradas en Jenkins)
+                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                    }
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    // Subir la imagen Docker a Docker Hub
+                    sh 'docker push $DOCKER_IMAGE'
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    // Aplicar el archivo de deployment en Kubernetes
+                    sh 'kubectl apply -f $K8S_DEPLOYMENT_FILE'
+                }
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                script {
+                    // Verificar que los pods estén corriendo correctamente
+                    sh 'kubectl get pods'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // Limpiar recursos o realizar otras tareas post-proceso
+            cleanWs()
+        }
+    }
+}
