@@ -3,7 +3,7 @@ name: SonarQube Analysis
 on:
   push:
     branches:
-      - main  # O cambia a la rama que quieras monitorear
+      - main  # O cambia a la rama
 
 jobs:
   sonar:
@@ -22,10 +22,10 @@ jobs:
         run: dotnet tool install --global dotnet-sonarscanner
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore TestApiNttData/TestApiNttData.sln
 
       - name: Build the project
-        run: dotnet build --no-restore
+        run: dotnet build TestApiNttData/TestApiNttData.sln --no-restore
 
       - name: Run SonarQube Analysis
         env:
@@ -33,8 +33,8 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
           dotnet sonarscanner begin /k:"NttDataTest" /o:"JoseGuarnizo" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
-          dotnet build
+          dotnet build TestApiNttData/TestApiNttData.sln  # Especifica la ruta al archivo .sln también en el comando build
           dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
       - name: Run Tests (Opcional)
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test TestApiNttData/TestApiNttData.sln --no-build --verbosity normal
