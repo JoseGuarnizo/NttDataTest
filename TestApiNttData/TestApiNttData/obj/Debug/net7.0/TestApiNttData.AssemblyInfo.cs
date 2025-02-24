@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TestApiNttData")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2061d26d80b4eb28263da47855387bceb65b0352")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1307bdd75386708c3f5add985098f258620b27cd")]
 [assembly: System.Reflection.AssemblyProductAttribute("TestApiNttData")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TestApiNttData")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

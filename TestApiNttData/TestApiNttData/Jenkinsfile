@@ -1,63 +1,98 @@
 pipeline {
-    agent any
+    agent any // Usa cualquier nodo disponible
 
     environment {
-        DOCKER_IMAGE = 'joseguarnizo/testnttdatdev:v2'  // Nombre de la imagen Docker
-        K8S_DEPLOYMENT_FILE = 'deployment.yml'        // Archivo de deployment de Kubernetes
-        DOCKER_CREDENTIALS = 'docker-hub-credentials'  // Credenciales de Docker Hub configuradas en Jenkins
+        K8S_CREDENTIALS = 'k8s-credentials' // ID credencial de Kubernetes
+        DOCKER_IMAGE = 'joseguarnizo/testnttdatdev:v2'
+        DOCKER_IMAGE_LATEST = 'joseguarnizo/testnttdatdev:latest'
+        K8S_DEPLOYMENT_FILE = 'deployment.yml'
+        DOCKER_CREDENTIALS = 'docker-hub-credentials'
     }
 
     stages {
         stage('Checkout') {
+            agent {
+                label 'node1' // Nodo 1
+            }
             steps {
-                // Obtener el código desde el repositorio
-                git url: 'https://github.com/JoseGuarnizo/NttDataTest.git'
+                git branch: 'main', url: 'https://github.com/JoseGuarnizo/NttDataTest.git'
             }
         }
 
         stage('Build Docker Image') {
+            agent {
+                label 'node2' // Nodo 2
+            }
             steps {
                 script {
-                    // Construir la imagen Docker usando el Dockerfile
-                    sh 'docker build -t $DOCKER_IMAGE .'
+                    dir('TestApiNttData/TestApiNttData') {
+                        bat "docker build -t %DOCKER_IMAGE% ."
+                        bat "docker tag %DOCKER_IMAGE% %DOCKER_IMAGE_LATEST%" // Etiqueta 'latest'
+                    }
                 }
             }
         }
 
         stage('Login to Docker Hub') {
+            agent {
+                label 'node2' // Nodo 2
+            }
             steps {
                 script {
-                    // Iniciar sesión en Docker Hub (usando las credenciales configuradas en Jenkins)
                     withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                        bat "docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%"
                     }
                 }
             }
         }
 
         stage('Push Docker Image') {
+            agent {
+                label 'node2' // Nodo 2
+            }
             steps {
                 script {
-                    // Subir la imagen Docker a Docker Hub
-                    sh 'docker push $DOCKER_IMAGE'
+                    bat "docker push %DOCKER_IMAGE%"
+                    bat "docker push %DOCKER_IMAGE_LATEST%"
                 }
             }
         }
 
         stage('Deploy to Kubernetes') {
+            agent {
+                label 'node1' // Nodo 1
+            }
             steps {
-                script {
-                    // Aplicar el archivo de deployment en Kubernetes
-                    sh 'kubectl apply -f $K8S_DEPLOYMENT_FILE'
+                dir('TestApiNttData/TestApiNttData/CI') {
+                    withCredentials([file(credentialsId: K8S_CREDENTIALS, variable: 'K8S_CONFIG')]) {
+                        bat 'cmd /c kubectl --kubeconfig=%K8S_CONFIG% apply -f %K8S_DEPLOYMENT_FILE%'
+                    }
+                }
+            }
+        }
+
+        stage('Verify Kubernetes Access') {
+            agent {
+                label 'node1' // Nodo 1
+            }
+            steps {
+                withCredentials([file(credentialsId: K8S_CREDENTIALS, variable: 'K8S_CONFIG')]) {
+                    script {
+                        bat "cmd /c kubectl --kubeconfig=%K8S_CONFIG% get nodes"
+                    }
                 }
             }
         }
 
         stage('Verify Deployment') {
+            agent {
+                label 'node1' // Nodo 1
+            }
             steps {
-                script {
-                    // Verificar que los pods estén corriendo correctamente
-                    sh 'kubectl get pods'
+                withCredentials([file(credentialsId: K8S_CREDENTIALS, variable: 'K8S_CONFIG')]) {
+                    script {
+                        bat "cmd /c kubectl --kubeconfig=%K8S_CONFIG% get pods"
+                    }
                 }
             }
         }
@@ -65,7 +100,6 @@ pipeline {
 
     post {
         always {
-            // Limpiar recursos o realizar otras tareas post-proceso
             cleanWs()
         }
     }
