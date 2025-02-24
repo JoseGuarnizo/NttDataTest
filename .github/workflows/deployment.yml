@@ -1,40 +1,61 @@
-name: SonarQube Analysis
+name: SonarQube
 
 on:
   push:
     branches:
-      - main  # O cambia a la rama
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
-  sonar:
-    runs-on: ubuntu-latest
-
+  build:
+    name: Build and analyze
+    runs-on: windows-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+      # Configura el JDK necesario
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          dotnet-version: 7.0.x  # Versión de .NET
+          java-version: 17
+          distribution: 'zulu' # Alternativa de distribución
 
-      - name: Install SonarScanner
-        run: dotnet tool install --global dotnet-sonarscanner
+      # Clona el repositorio
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Evita clones superficiales para análisis completos
 
-      - name: Restore dependencies
-        run: dotnet restore TestApiNttData/TestApiNttData.sln
+      # Cache de paquetes de SonarQube
+      - name: Cache SonarQube Cloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~\sonar\cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
 
-      - name: Build the project
-        run: dotnet build TestApiNttData/TestApiNttData.sln --no-restore
+      # Cache de SonarQube Scanner
+      - name: Cache SonarQube Cloud scanner
+        id: cache-sonar-scanner
+        uses: actions/cache@v4
+        with:
+          path: .\.sonar\scanner
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
 
-      - name: Run SonarQube Analysis
+      # Instala el SonarScanner solo si no está en cache
+      - name: Install SonarQube Cloud scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+        shell: powershell
+        run: |
+          New-Item -Path .\.sonar\scanner -ItemType Directory
+          dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
+
+      # Construye el proyecto y realiza el análisis con SonarCloud
+      - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        shell: powershell
         run: |
-          dotnet sonarscanner begin /k:"NttDataTest" /o:"JoseGuarnizo" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
-          dotnet build TestApiNttData/TestApiNttData.sln  # Especifica la ruta al archivo .sln también en el comando build
-          dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
-
-      - name: Run Tests (Opcional)
-        run: dotnet test TestApiNttData/TestApiNttData.sln --no-build --verbosity normal
+          # Especifica la ruta al archivo .sln correctamente
+          .\.sonar\scanner\dotnet-sonarscanner begin /k:"JoseGuarnizo_NttDataTest" /o:"joseguarnizo" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+          dotnet build TestApiNttData/TestApiNttData.sln  # Especifica la ruta al archivo .sln
+          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
