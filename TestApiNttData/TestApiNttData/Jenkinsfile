@@ -2,96 +2,72 @@ pipeline {
     agent any // Usa cualquier nodo disponible
 
     environment {
-        K8S_CREDENTIALS = 'k8s-credentials' // ID credencial de Kubernetes
         DOCKER_IMAGE = 'joseguarnizo/testnttdatdev:v2'
         DOCKER_IMAGE_LATEST = 'joseguarnizo/testnttdatdev:latest'
-        K8S_DEPLOYMENT_FILE = 'deployment.yml'
         DOCKER_CREDENTIALS = 'docker-hub-credentials'
+        RENDER_SERVICE_ID = 'RENDER_API_TOKEN' // ID del servicio en Render
     }
 
     stages {
         stage('Checkout') {
-            agent {
-                label 'node1' // Nodo 1
-            }
             steps {
                 git branch: 'main', url: 'https://github.com/JoseGuarnizo/NttDataTest.git'
             }
         }
 
         stage('Build Docker Image') {
-            agent {
-                label 'node2' // Nodo 2
-            }
             steps {
                 script {
                     dir('TestApiNttData/TestApiNttData') {
-                        bat "docker build -t %DOCKER_IMAGE% ."
-                        bat "docker tag %DOCKER_IMAGE% %DOCKER_IMAGE_LATEST%" // Etiqueta 'latest'
+                        bat "docker build -t $DOCKER_IMAGE ."
+                        bat "docker tag $DOCKER_IMAGE $DOCKER_IMAGE_LATEST" // Etiqueta 'latest'
                     }
                 }
             }
         }
 
         stage('Login to Docker Hub') {
-            agent {
-                label 'node2' // Nodo 2
-            }
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        bat "docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%"
+                        bat "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
                     }
                 }
             }
         }
 
         stage('Push Docker Image') {
-            agent {
-                label 'node2' // Nodo 2
-            }
             steps {
                 script {
-                    bat "docker push %DOCKER_IMAGE%"
-                    bat "docker push %DOCKER_IMAGE_LATEST%"
+                    bat "docker push $DOCKER_IMAGE"
+                    bat "docker push $DOCKER_IMAGE_LATEST"
                 }
             }
         }
 
-        stage('Deploy to Kubernetes') {
-            agent {
-                label 'node1' // Nodo 1
-            }
+        // Desplegar a Render
+        stage('Deploy to Render') {
             steps {
-                dir('TestApiNttData/TestApiNttData/CI') {
-                    withCredentials([file(credentialsId: K8S_CREDENTIALS, variable: 'K8S_CONFIG')]) {
-                        bat 'cmd /c kubectl --kubeconfig=%K8S_CONFIG% apply -f %K8S_DEPLOYMENT_FILE%'
-                    }
-                }
-            }
-        }
-
-        stage('Verify Kubernetes Access') {
-            agent {
-                label 'node1' // Nodo 1
-            }
-            steps {
-                withCredentials([file(credentialsId: K8S_CREDENTIALS, variable: 'K8S_CONFIG')]) {
+                withCredentials([string(credentialsId: 'RENDER_API_TOKEN', variable: 'RENDER_API_TOKEN')]) {
                     script {
-                        bat "cmd /c kubectl --kubeconfig=%K8S_CONFIG% get nodes"
-                    }
-                }
-            }
-        }
+                        // Usar el API de Render para hacer deploy
+                        def jsonPayload = """
+                            {
+                                "branch": "main",
+                                "dockerImage": "$DOCKER_IMAGE_LATEST"
+                            }
+                        """
+                        // Crear un archivo temporal para manejar el token de forma segura
+                        writeFile file: 'render-api-request.json', text: jsonPayload
 
-        stage('Verify Deployment') {
-            agent {
-                label 'node1' // Nodo 1
-            }
-            steps {
-                withCredentials([file(credentialsId: K8S_CREDENTIALS, variable: 'K8S_CONFIG')]) {
-                    script {
-                        bat "cmd /c kubectl --kubeconfig=%K8S_CONFIG% get pods"
+                        def response = bat(script: """
+                            curl -X POST https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys ^
+                            -H "Authorization: Bearer $RENDER_API_TOKEN" ^
+                            -H "Content-Type: application/json" ^
+                            -d @render-api-request.json
+                        """, returnStdout: true).trim()
+
+                        echo "Response from Render: $response"
                     }
                 }
             }

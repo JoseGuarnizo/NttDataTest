@@ -49,6 +49,7 @@ namespace TestApiNttData.Controllers
 			}
 		}
 
+		//No acepta estos metodos y lanza un error  
 		[HttpGet, HttpPut, HttpDelete, HttpPatch, HttpOptions, HttpHead]
 		public IActionResult MethodsNotPermited()
 		{

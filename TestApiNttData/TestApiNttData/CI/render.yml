@@ -1,0 +1,9 @@
+﻿services:
+  - type: web
+    name: testapinttdata
+    env: docker
+    plan: free    # O plan free
+    image: joseguarnizo/testapinttdata:latest  # imagen del Docker Hub
+    instances: 2  # Número de réplicas (nodos)
+    buildCommand: null  # No es necesario, ya que estamos usando una imagen preexistente
+    startCommand: 'docker run -p 80:5000 joseguarnizo/testapinttdata:latest'  # Inicia el contenedor

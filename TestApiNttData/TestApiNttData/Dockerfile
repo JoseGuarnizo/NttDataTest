@@ -18,7 +18,7 @@ COPY . .
 # Verificar archivos en el contenedor
 RUN dir
 
-# Restaurar paquetes (sin la carpeta TestApiNttData)
+# Restaurar paquetes
 RUN dotnet restore "TestApiNttData.csproj"
 
 # Construir el proyecto
