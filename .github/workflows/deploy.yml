@@ -1,0 +1,28 @@
+name: Deploy to Render (Free)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Configurar Git
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+
+      - name: Autenticar GitHub con token
+        run: |
+          git remote set-url origin https://x-access-token:${{ secrets.RenderApiTest }}@github.com/${{ github.repository }}.git
+
+      - name: Hacer commit vacío para forzar despliegue en Render
+        run: |
+          git commit --allow-empty -m "Trigger Render Deployment"
+          git push origin main
