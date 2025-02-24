@@ -1,0 +1,1 @@
+_RIC:\Users\viejo\DevOps\TestApiNttData\TestApiNttData\TestApiNttData.csproj¢net7.0òCSharp11

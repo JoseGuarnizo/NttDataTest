@@ -1,0 +1,12 @@
+
+vC:\Users\viejo\DevOps\TestApiNttData\TestApiNttData\obj\Debug\net7.0\TestApiNttData.MvcApplicationPartsAssemblyInfo.csutf-8n
+cC:\Users\viejo\DevOps\TestApiNttData\TestApiNttData\obj\Debug\net7.0\TestApiNttData.AssemblyInfo.csutf-8~
+sC:\Users\viejo\DevOps\TestApiNttData\TestApiNttData\obj\Debug\net7.0\.NETCoreApp,Version=v7.0.AssemblyAttributes.csutf-8p
+eC:\Users\viejo\DevOps\TestApiNttData\TestApiNttData\obj\Debug\net7.0\TestApiNttData.GlobalUsings.g.csutf-8O
+FC:\Users\viejo\DevOps\TestApiNttData\TestApiNttData\WeatherForecast.csutf-8[
+RC:\Users\viejo\DevOps\TestApiNttData\TestApiNttData\Services\JwtServicesNttData.csutf-8G
+>C:\Users\viejo\DevOps\TestApiNttData\TestApiNttData\Program.csutf-8Z
+QC:\Users\viejo\DevOps\TestApiNttData\TestApiNttData\Middleware\ApiKeyMidleware.csutf-8X
+OC:\Users\viejo\DevOps\TestApiNttData\TestApiNttData\Entities\ResponseNttData.csutf-8Z
+QC:\Users\viejo\DevOps\TestApiNttData\TestApiNttData\Controllers\ApiTestNttData.csutf-8W
+NC:\Users\viejo\DevOps\TestApiNttData\TestApiNttData\Entities\RequestNttData.csutf-8
