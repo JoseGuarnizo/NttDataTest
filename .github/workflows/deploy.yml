@@ -18,11 +18,10 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
 
-      - name: Autenticar GitHub con token
+      - name: Autenticar con Personal Access Token
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git
-
-      - name: Hacer commit vacío para forzar despliegue en Render
-        run: |
-          git commit --allow-empty -m "Despliegue forzado"
+          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/JoseGuarnizo/NttDataTest.git
+          git commit --allow-empty -m "Trigger Render Deployment"
           git push origin main
