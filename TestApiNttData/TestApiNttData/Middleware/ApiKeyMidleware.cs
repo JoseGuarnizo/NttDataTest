@@ -9,7 +9,7 @@ public class ApiKeyMidleware
 	public ApiKeyMidleware(RequestDelegate apiNext, IConfiguration confApi)
 	{
 		_nextApi = apiNext;
-		apiKeyValidate = confApi["ApiKeyNttData"];  
+		apiKeyValidate = confApi["ApiKeyNttData"];    
 	}
 
 	public async Task InvokeAsync(HttpContext contextApiKey)
