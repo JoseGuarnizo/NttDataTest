@@ -1,4 +1,4 @@
-name: SonarQube
+name: Deployment NttDataTest
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build_and_analyze:
-    name: Build and analyze with Sonar
+    name: Build, Test and Analyze
     runs-on: windows-latest
     steps:
       # Configura el JDK necesario
@@ -41,7 +41,7 @@ jobs:
           key: ${{ runner.os }}-sonar-scanner
           restore-keys: ${{ runner.os }}-sonar-scanner
 
-      # Instala el SonarScanner solo si no está en cache
+      # Instala el SonarQube Cloud scanner solo si no está en cache
       - name: Install SonarQube Cloud scanner
         if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         shell: powershell
@@ -49,7 +49,17 @@ jobs:
           New-Item -Path .\.sonar\scanner -ItemType Directory
           dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
 
-      # Construye el proyecto y realiza el análisis con SonarCloud
+      # Etapa de Build (Compilación del proyecto)
+      - name: Build the project
+        run: |
+          dotnet build TestApiNttData/TestApiNttData.sln  # Especifica la ruta
+
+      # Etapa de Test (Ejecutar pruebas)
+      - name: Run tests
+        run: |
+          dotnet test TestApiNttData/TestApiNttData.sln --logger "trx"  # Especifica la ruta y usa el logger TRX para ver resultados
+
+      # Realiza el análisis con SonarCloud
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
