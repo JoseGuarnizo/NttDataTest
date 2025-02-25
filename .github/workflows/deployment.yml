@@ -1,4 +1,4 @@
-name: SonarQube
+name: Build and Test
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  build_and_analyze:
-    name: Build and analyze with Sonar
+  build:
+    name: Build the Project
     runs-on: windows-latest
     steps:
       # Configura el JDK necesario
@@ -49,11 +49,28 @@ jobs:
           New-Item -Path .\.sonar\scanner -ItemType Directory
           dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
 
-      # Construye el proyecto y realiza el análisis con SonarCloud
+      # Construye el proyecto
+      - name: Build the project
+        run: |
+          dotnet build TestApiNttData/TestApiNttData.sln
+
+  test:
+    name: Run Tests and Analyze with Sonar
+    runs-on: windows-latest
+    needs: build  # Asegura que los tests solo se ejecuten después de la etapa de Build
+    steps:
+      # Clona el repositorio
+      - uses: actions/checkout@v4
+
+      # Paso 1: Ejecutar pruebas
+      - name: Run unit tests
+        run: |
+          dotnet test TestApiNttData/TestApiNttData.sln --logger "trx;LogFileName=test-results.trx"
+
+      # Paso 2: Ejecutar análisis con SonarQube
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        shell: powershell
         run: |
           # Especifica la ruta al archivo .sln correctamente
           .\.sonar\scanner\dotnet-sonarscanner begin /k:"JoseGuarnizo_NttDataTest" /o:"joseguarnizo" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
