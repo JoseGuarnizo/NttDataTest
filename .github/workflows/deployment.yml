@@ -41,13 +41,13 @@ jobs:
           key: ${{ runner.os }}-sonar-scanner
           restore-keys: ${{ runner.os }}-sonar-scanner
 
-      # Instala el SonarScanner solo si no está en cache
+      # Instala el SonarQube Cloud scanner solo si no está en cache
       - name: Install SonarQube Cloud scanner
         if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         shell: powershell
         run: |
-          New-Item -Path .\.sonar\scanner -ItemType Directory
-          dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
+          New-Item -Path .\.sonar\scanner -ItemType Directory -Force
+          dotnet tool install dotnet-sonarscanner --tool-path .\.sonar\scanner
 
       # Construye el proyecto
       - name: Build the project
@@ -72,7 +72,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          # Especifica la ruta al archivo .sln correctamente
+          # Verifica si el escáner está correctamente instalado en la ruta esperada
           .\.sonar\scanner\dotnet-sonarscanner begin /k:"JoseGuarnizo_NttDataTest" /o:"joseguarnizo" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
           dotnet build TestApiNttData/TestApiNttData.sln  # Especifica la ruta al archivo .sln
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
