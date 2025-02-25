@@ -41,7 +41,7 @@ namespace TestApiNttData.Controllers
 					message = $"Hello {queryNttData.to} your message will be sent"					
 				};
 
-				return Ok(responseNttData);
+				return Ok(responseNttData);  
 			}
 			catch(Exception ex)
 			{
