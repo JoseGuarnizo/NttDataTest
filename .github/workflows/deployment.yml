@@ -1,4 +1,4 @@
-name: SonarQube
+name: SonarQube y Deploy and Render
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  build:
-    name: Build and analyze
+  build_and_analyze:
+    name: Build and analyze with sonar and deploy with render
     runs-on: windows-latest
     steps:
       # Configura el JDK necesario
@@ -59,3 +59,22 @@ jobs:
           .\.sonar\scanner\dotnet-sonarscanner begin /k:"JoseGuarnizo_NttDataTest" /o:"joseguarnizo" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
           dotnet build TestApiNttData/TestApiNttData.sln  # Especifica la ruta al archivo .sln
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+  
+  deploy_to_render:
+    name: Deploy to Render
+    runs-on: ubuntu-latest
+    needs: build_and_analyze  # Asegura que el despliegue solo ocurra después del análisis
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Paso 1: Configurar Render CLI
+      - name: Set up Render CLI
+        run: |
+          curl -fsSL https://cdn.render.com/cli/install.sh | bash
+          echo "${{ secrets.RENDER_API_KEY }}" | render login --api-key
+
+      # Paso 2: Desplegar en Render
+      - name: Deploy to Render
+        run: |
+          render deploy --service ${RENDER_SERVICE_ID}
