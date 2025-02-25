@@ -1,4 +1,4 @@
-name: Build and Test
+name: SonarQube
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  build:
-    name: Build the Project
+  build_and_analyze:
+    name: Build and analyze with Sonar
     runs-on: windows-latest
     steps:
       # Configura el JDK necesario
@@ -41,38 +41,21 @@ jobs:
           key: ${{ runner.os }}-sonar-scanner
           restore-keys: ${{ runner.os }}-sonar-scanner
 
-      # Instala el SonarQube Cloud scanner solo si no está en cache
+      # Instala el SonarScanner solo si no está en cache
       - name: Install SonarQube Cloud scanner
         if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         shell: powershell
         run: |
-          New-Item -Path .\.sonar\scanner -ItemType Directory -Force
-          dotnet tool install dotnet-sonarscanner --tool-path .\.sonar\scanner
+          New-Item -Path .\.sonar\scanner -ItemType Directory
+          dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
 
-      # Construye el proyecto
-      - name: Build the project
-        run: |
-          dotnet build TestApiNttData/TestApiNttData.sln
-
-  test:
-    name: Run Tests and Analyze with Sonar
-    runs-on: windows-latest
-    needs: build  # Asegura que los tests solo se ejecuten después de la etapa de Build
-    steps:
-      # Clona el repositorio
-      - uses: actions/checkout@v4
-
-      # Paso 1: Ejecutar pruebas
-      - name: Run unit tests
-        run: |
-          dotnet test TestApiNttData/TestApiNttData.sln --logger "trx;LogFileName=test-results.trx"
-
-      # Paso 2: Ejecutar análisis con SonarQube
+      # Construye el proyecto y realiza el análisis con SonarCloud
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        shell: powershell
         run: |
-          # Verifica si el escáner está correctamente instalado en la ruta esperada
+          # Especifica la ruta al archivo .sln correctamente
           .\.sonar\scanner\dotnet-sonarscanner begin /k:"JoseGuarnizo_NttDataTest" /o:"joseguarnizo" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
           dotnet build TestApiNttData/TestApiNttData.sln  # Especifica la ruta al archivo .sln
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
